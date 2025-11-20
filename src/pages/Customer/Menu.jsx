@@ -153,8 +153,15 @@ const Menu = () => {
   return (
     <div className={`font-sans antialiased min-h-screen transition-colors duration-500 ${theme.bg} ${theme.text} selection:bg-[#C9A25D] selection:text-white`}>
       
-      {/* Add CSS to hide scrollbar for cleaner look */}
+      {/* --- FIXED: Added missing Fonts & Styles --- */}
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap');
+        .font-serif { font-family: 'Cormorant Garamond', serif; }
+        .font-sans { font-family: 'Inter', sans-serif; }
+        html { scroll-behavior: smooth; }
+        *, *::before, *::after { transition-property: background-color, border-color, color, fill, stroke; transition-duration: 300ms; }
+        
+        /* Hide Scrollbar for Menu Categories */
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
       `}</style>
@@ -187,12 +194,6 @@ const Menu = () => {
       {/* --- Category Navigation (Responsive) --- */}
       <section className={`sticky top-[70px] z-40 py-4 md:py-6 border-b ${theme.border} ${theme.bg}/95 backdrop-blur-md transition-colors duration-500`}>
         <div className="max-w-screen-xl mx-auto px-0 md:px-6">
-            {/* 
-              Responsive Container:
-              - 'overflow-x-auto': Allows scrolling on mobile
-              - 'no-scrollbar': Hides ugly scrollbars (via custom CSS above)
-              - 'px-6': Adds padding so first/last items aren't cut off
-            */}
             <div className="overflow-x-auto no-scrollbar px-6">
                 <div className="flex justify-start md:justify-center items-center gap-6 md:gap-12 min-w-max">
                     {categories.map((cat) => (
@@ -231,7 +232,6 @@ const Menu = () => {
                                 <h3 className={`font-serif text-2xl md:text-3xl ${theme.text} group-hover:text-[#C9A25D] transition-colors duration-300`}>
                                     {item.name}
                                 </h3>
-                                {/* Dots Leader */}
                                 <div className={`flex-grow mx-4 border-b border-dotted ${darkMode ? 'border-stone-700' : 'border-stone-300'} opacity-50 relative -top-1`}></div>
                                 <span className={`font-sans text-xs font-medium tracking-wider uppercase ${theme.subText}`}>
                                     {item.price}
