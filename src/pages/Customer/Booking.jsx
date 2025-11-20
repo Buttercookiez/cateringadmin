@@ -1,13 +1,13 @@
 // src/pages/Customer/Booking.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  ArrowUp, Calendar, Users, MapPin, Clock, 
-  ChevronDown, Check, Utensils 
+  ArrowUp, Calendar, Users, ChevronDown, 
+  Check, Utensils, ChevronLeft, ChevronRight 
 } from 'lucide-react';
 import Navbar from '../../components/customer/Navbar';
 import Footer from '../../components/customer/Footer';
 
-// --- Minimalist Animation Wrapper (Same as Homepage) ---
+// --- Minimalist Animation Wrapper ---
 const FadeIn = ({ children, delay = 0, direction = 'up' }) => {
   const [isVisible, setIsVisible] = useState(false);
   const ref = useRef(null);
@@ -48,18 +48,28 @@ const Booking = () => {
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
-  // Form State
+  // --- Form & Dropdown States ---
+  const [formData, setFormData] = useState({
+    name: '', email: '', phone: '', date: '', guests: '', notes: ''
+  });
+  
   const [eventType, setEventType] = useState("");
   const [serviceStyle, setServiceStyle] = useState("");
-  const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-    date: '',
-    guests: '',
-    notes: ''
-  });
+  
+  // Dropdown Toggles
+  const [eventTypeOpen, setEventTypeOpen] = useState(false);
+  const [calendarOpen, setCalendarOpen] = useState(false);
+
+  // --- Calendar Logic States ---
+  const [currentDate, setCurrentDate] = useState(new Date()); // For navigation (Month/Year)
+  
+  // MOCK DATA: Dates that are already booked (YYYY-MM-DD)
+  const bookedDates = [
+    "2025-11-15", 
+    "2025-11-20", 
+    "2025-12-01", 
+    "2025-12-25"
+  ];
 
   // --- Dark Mode Logic ---
   useEffect(() => {
@@ -90,8 +100,78 @@ const Booking = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    alert("Booking Request Sent! We will contact you shortly.");
+    alert(`Request Sent for ${formData.date}! We will contact you shortly.`);
   };
+
+  // --- Calendar Helpers ---
+  const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
+  const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+  
+  const handleDateClick = (day) => {
+    const selected = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+    // Adjust for timezone offset to get YYYY-MM-DD string correctly
+    const offset = selected.getTimezoneOffset();
+    const selectedDate = new Date(selected.getTime() - (offset*60*1000));
+    const dateString = selectedDate.toISOString().split('T')[0];
+
+    if (!bookedDates.includes(dateString)) {
+      setFormData(prev => ({ ...prev, date: dateString }));
+      setCalendarOpen(false);
+    }
+  };
+
+  const changeMonth = (offset) => {
+    const newDate = new Date(currentDate.setMonth(currentDate.getMonth() + offset));
+    setCurrentDate(new Date(newDate));
+  };
+
+  const renderCalendarDays = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const daysInMonth = getDaysInMonth(year, month);
+    const startDay = getFirstDayOfMonth(year, month);
+    
+    const days = [];
+    
+    // Empty slots for previous month
+    for (let i = 0; i < startDay; i++) {
+      days.push(<div key={`empty-${i}`} className="p-2"></div>);
+    }
+
+    // Actual days
+    for (let day = 1; day <= daysInMonth; day++) {
+      // Construct date string YYYY-MM-DD manually to match bookedDates format
+      const checkDate = new Date(year, month, day);
+      const offset = checkDate.getTimezoneOffset();
+      const localCheckDate = new Date(checkDate.getTime() - (offset*60*1000));
+      const dateStr = localCheckDate.toISOString().split('T')[0];
+      
+      const isBooked = bookedDates.includes(dateStr);
+      const isSelected = formData.date === dateStr;
+      const isPast = new Date().setHours(0,0,0,0) > checkDate;
+
+      days.push(
+        <button
+          key={day}
+          type="button"
+          disabled={isBooked || isPast}
+          onClick={() => handleDateClick(day)}
+          className={`
+            p-2 text-sm rounded-full w-8 h-8 flex items-center justify-center mx-auto transition-all duration-200
+            ${isSelected ? 'bg-[#C9A25D] text-white font-bold' : ''}
+            ${!isSelected && !isBooked && !isPast ? (darkMode ? 'hover:bg-stone-800 text-stone-300' : 'hover:bg-stone-200 text-stone-700') : ''}
+            ${isBooked ? 'text-stone-300 dark:text-stone-700 line-through cursor-not-allowed opacity-50' : ''}
+            ${isPast ? 'text-stone-300 dark:text-stone-700 cursor-default' : ''}
+          `}
+        >
+          {day}
+        </button>
+      );
+    }
+    return days;
+  };
+
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
   // Helper for dynamic colors
   const theme = {
@@ -101,12 +181,12 @@ const Booking = () => {
     subText: darkMode ? 'text-stone-400' : 'text-stone-500',
     border: darkMode ? 'border-stone-800' : 'border-stone-200',
     inputFocus: darkMode ? 'focus:border-stone-100' : 'focus:border-stone-900',
+    dropdownBg: darkMode ? 'bg-[#1c1c1c]' : 'bg-white',
   };
 
   return (
     <div className={`font-sans antialiased transition-colors duration-500 overflow-x-hidden ${theme.bg} ${theme.text} selection:bg-[#C9A25D] selection:text-white`}>
       
-      {/* Styles */}
       <style>
         {`
           @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap');
@@ -115,21 +195,13 @@ const Booking = () => {
           html { scroll-behavior: smooth; }
           *, *::before, *::after { transition-property: background-color, border-color, color, fill, stroke; transition-duration: 300ms; }
           ::placeholder { color: #a8a29e; opacity: 1; }
-          
-          /* Custom Date Input Icon Override */
-          input[type="date"]::-webkit-calendar-picker-indicator {
-            filter: ${darkMode ? 'invert(1)' : 'invert(0)'};
-            opacity: 0.5;
-            cursor: pointer;
-          }
         `}
       </style>
 
       <Navbar darkMode={darkMode} setDarkMode={setDarkMode} isScrolled={isScrolled} />
 
-      {/* --- Hero Section (Simple & Elegant) --- */}
+      {/* --- Hero Section --- */}
       <header className="relative h-[50vh] md:h-[60vh] w-full overflow-hidden bg-stone-900 flex flex-col justify-center items-center">
-        {/* Parallax Image Background */}
         <div className="absolute inset-0 w-full h-full z-0">
           <img 
             src="https://images.pexels.com/photos/2291367/pexels-photo-2291367.jpeg?auto=compress&cs=tinysrgb&w=1600" 
@@ -209,17 +281,54 @@ const Booking = () => {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     
-                    {/* Date Picker */}
+                    {/* CUSTOM DATE PICKER UI */}
                     <div className="group relative">
-                      <div className="flex items-center border-b border-stone-200 dark:border-stone-800">
-                         <Calendar className={`w-4 h-4 ${theme.subText} mr-3`} />
-                         <input 
-                           type="date" 
-                           name="date"
-                           onChange={handleInputChange}
-                           className={`w-full bg-transparent py-3 ${theme.text} focus:outline-none placeholder-stone-400`}
-                           required
-                         />
+                      <button
+                        type="button"
+                        onClick={() => setCalendarOpen(!calendarOpen)}
+                        className={`w-full bg-transparent border-b ${theme.border} py-3 pl-0 pr-10 text-left focus:outline-none ${theme.inputFocus} transition-colors flex items-center cursor-pointer`}
+                      >
+                        <Calendar className={`w-4 h-4 ${theme.subText} mr-3`} />
+                        <span className={formData.date ? theme.text : "text-stone-400"}>
+                          {formData.date || "Select Date"}
+                        </span>
+                      </button>
+
+                      {/* Calendar Dropdown */}
+                      <div className={`absolute top-full left-0 w-full sm:w-[320px] mt-4 p-5 shadow-2xl rounded-sm z-50 transition-all duration-300 origin-top ${calendarOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'} ${theme.dropdownBg} border ${theme.border}`}>
+                        
+                        {/* Header */}
+                        <div className="flex justify-between items-center mb-4">
+                          <button type="button" onClick={() => changeMonth(-1)} className={`p-1 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full ${theme.text}`}>
+                            <ChevronLeft className="w-5 h-5" />
+                          </button>
+                          <span className={`font-serif text-lg ${theme.text}`}>
+                            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                          </span>
+                          <button type="button" onClick={() => changeMonth(1)} className={`p-1 hover:bg-stone-100 dark:hover:bg-stone-800 rounded-full ${theme.text}`}>
+                            <ChevronRight className="w-5 h-5" />
+                          </button>
+                        </div>
+
+                        {/* Days Header */}
+                        <div className="grid grid-cols-7 text-center mb-2">
+                          {['S','M','T','W','T','F','S'].map((d, i) => (
+                            <span key={i} className="text-[10px] font-bold uppercase text-[#C9A25D]">{d}</span>
+                          ))}
+                        </div>
+
+                        {/* Days Grid */}
+                        <div className="grid grid-cols-7 gap-1 text-center">
+                          {renderCalendarDays()}
+                        </div>
+                        
+                        {/* Legend */}
+                        <div className="mt-4 pt-3 border-t border-stone-200 dark:border-stone-800 flex justify-center gap-4 text-[10px] uppercase tracking-wider">
+                          <div className="flex items-center gap-1 text-stone-400"><div className="w-2 h-2 bg-stone-300 rounded-full"></div> Available</div>
+                          <div className="flex items-center gap-1 text-stone-400"><div className="w-2 h-2 bg-[#C9A25D] rounded-full"></div> Selected</div>
+                          <div className="flex items-center gap-1 text-stone-400 line-through decoration-stone-400">Booked</div>
+                        </div>
+
                       </div>
                     </div>
 
@@ -238,26 +347,26 @@ const Booking = () => {
                       </div>
                     </div>
 
-                    {/* Custom Event Type Dropdown */}
+                    {/* Event Type Dropdown */}
                     <div className="group relative md:col-span-2">
                       <button 
                         type="button"
-                        onClick={() => setDropdownOpen(!dropdownOpen)}
+                        onClick={() => setEventTypeOpen(!eventTypeOpen)}
                         className={`w-full bg-transparent border-b ${theme.border} py-3 pl-0 pr-10 text-left focus:outline-none ${theme.inputFocus} transition-colors flex justify-between items-center cursor-pointer`}
                       >
                         <span className={eventType ? theme.text : "text-stone-400"}>
                           {eventType || "Event Type"}
                         </span>
-                        <ChevronDown className={`w-4 h-4 ${theme.subText} transition-transform duration-300 ${dropdownOpen ? 'rotate-180' : ''}`} />
+                        <ChevronDown className={`w-4 h-4 ${theme.subText} transition-transform duration-300 ${eventTypeOpen ? 'rotate-180' : ''}`} />
                       </button>
 
-                      <div className={`absolute top-full left-0 w-full mt-2 py-2 shadow-xl rounded-sm z-50 transition-all duration-300 origin-top ${dropdownOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'} ${darkMode ? 'bg-[#1c1c1c] border border-stone-800' : 'bg-white border border-stone-100'}`}>
+                      <div className={`absolute top-full left-0 w-full mt-2 py-2 shadow-xl rounded-sm z-40 transition-all duration-300 origin-top ${eventTypeOpen ? 'opacity-100 scale-y-100' : 'opacity-0 scale-y-0 pointer-events-none'} ${theme.dropdownBg} border ${theme.border}`}>
                         {['Wedding', 'Corporate Gala', 'Private Dinner', 'Cocktail Reception', 'Product Launch'].map((option) => (
                           <div 
                             key={option}
                             onClick={() => {
                               setEventType(option);
-                              setDropdownOpen(false);
+                              setEventTypeOpen(false);
                             }}
                             className={`px-6 py-3 text-sm cursor-pointer transition-colors ${darkMode ? 'text-stone-400 hover:text-white hover:bg-stone-800' : 'text-stone-500 hover:text-stone-900 hover:bg-stone-50'}`}
                           >
