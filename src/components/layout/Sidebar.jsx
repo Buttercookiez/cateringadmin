@@ -1,25 +1,30 @@
-// src/components/customer/layout/Sidebar.jsx
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom'; // 1. Import Router Hooks
+import { useNavigate, useLocation } from 'react-router-dom'; 
 import { 
   LayoutGrid, Calendar, Users, CheckSquare, MapPin, 
-  Package, DollarSign, TrendingUp, ChefHat, ChevronLeft, ChevronRight
+  Package, DollarSign, TrendingUp, ChefHat, ChevronLeft, ChevronRight,
+  BookOpen // Added Icon for Bookings
 } from 'lucide-react';
 
 const Sidebar = ({ sidebarOpen, setSidebarOpen, theme }) => {
-  const navigate = useNavigate(); // Hook for navigation
-  const location = useLocation(); // Hook to get current URL
+  const navigate = useNavigate(); 
+  const location = useLocation(); 
   
-  // 2. Map your folder structure to URL paths
+  // Toggle Function that saves to LocalStorage
+  const toggleSidebar = () => {
+    const newState = !sidebarOpen;
+    setSidebarOpen(newState);
+    localStorage.setItem('sidebarState', newState); 
+  };
+
+  // Navigation Map
   const menuGroups = [
     {
       label: "Management",
       items: [
-        // Pointing to src/pages/Dashboard/Dashboard.jsx
         { id: 'Overview', icon: LayoutGrid, label: 'Dashboard', path: '/dashboard' },
-        // Pointing to src/pages/Events/Calendar.jsx
+        { id: 'Bookings', icon: BookOpen, label: 'Booking Details', path: '/bookings' }, // <--- ADDED HERE
         { id: 'Calendar', icon: Calendar, label: 'Events Calendar', path: '/events/calendar' },
-        // Assuming src/pages/Customer or generic Clients page
         { id: 'Clients', icon: Users, label: 'Client Records', path: '/clients' },
         { id: 'Tasks', icon: CheckSquare, label: 'Task Manager', path: '/tasks' },
       ]
@@ -28,7 +33,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, theme }) => {
       label: "Operations",
       items: [
         { id: 'Kitchen', icon: ChefHat, label: 'Kitchen & Prep', path: '/kitchen' },
-        // Pointing to src/pages/Inventory
         { id: 'Inventory', icon: Package, label: 'Inventory', path: '/inventory/inventory' },
         { id: 'Venue', icon: MapPin, label: 'Venue Status', path: '/venue-status' },
       ]
@@ -36,14 +40,12 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, theme }) => {
     {
       label: "Finance",
       items: [
-        // Pointing to src/pages/Finance
         { id: 'Finance', icon: DollarSign, label: 'Financials', path: '/finance' },
         { id: 'Reports', icon: TrendingUp, label: 'Profit Reports', path: '/finance/reports' },
       ]
     }
   ];
 
-  // Helper to check if a link is active
   const isActive = (path) => location.pathname === path;
 
   return (
@@ -51,8 +53,8 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, theme }) => {
       
       {/* Toggle Button */}
       <button 
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className={`absolute -right-3 top-10 w-6 h-6 rounded-full border ${theme.border} ${theme.cardBg} flex items-center justify-center z-50 hover:text-[#C9A25D] transition-colors`}
+        onClick={toggleSidebar}
+        className={`absolute -right-3 top-10 w-6 h-6 rounded-full border ${theme.border} ${theme.cardBg} flex items-center justify-center z-50 hover:text-[#C9A25D] transition-colors shadow-sm`}
       >
         {sidebarOpen ? <ChevronLeft size={12} /> : <ChevronRight size={12} />}
       </button>
@@ -82,7 +84,6 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen, theme }) => {
               {group.items.map((item) => (
                 <button
                   key={item.id}
-                  // 3. Navigate on click instead of setting state
                   onClick={() => navigate(item.path)}
                   title={!sidebarOpen ? item.label : ''}
                   className={`

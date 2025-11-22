@@ -38,8 +38,24 @@ const FadeIn = ({ children, delay = 0 }) => {
 };
 
 const CalendarPage = () => {
-  const [darkMode, setDarkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+ const [darkMode, setDarkMode] = useState(() => {
+  return localStorage.getItem('theme') === 'dark';
+});
+
+useEffect(() => {
+  if (darkMode) {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+  }
+}, [darkMode]);
+  // Initialize state based on Local Storage
+const [sidebarOpen, setSidebarOpen] = useState(() => {
+  const savedState = localStorage.getItem('sidebarState');
+  return savedState !== null ? savedState === 'true' : true;
+});
   const [activeTab, setActiveTab] = useState('Calendar');
   const [searchQuery, setSearchQuery] = useState("");
   

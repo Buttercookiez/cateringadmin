@@ -6,11 +6,11 @@ function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Dashboard />} />
-        <Route path="/dashboard" element={<Dashboard />} />
+      {/* <Route path="/dashboard" element={<Dashboard />} /> */}
         {/* your other routes */}
       </Routes>
     </BrowserRouter>
   );
-}
+}   
 
-export default AppRouter;
+export default AppRouter;            

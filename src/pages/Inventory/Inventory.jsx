@@ -1,7 +1,8 @@
+// src/pages/Inventory/Inventory.jsx
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Search, Plus, Filter, ArrowUpDown, AlertTriangle, 
-  Package, Tag, RefreshCw, MoreHorizontal, Download 
+  Plus, ArrowUpDown, AlertTriangle, 
+  Package, Tag, MoreHorizontal, Download 
 } from 'lucide-react';
 
 // Import Layout Components
@@ -38,8 +39,24 @@ const FadeIn = ({ children, delay = 0 }) => {
 };
 
 const Inventory = () => {
-  const [darkMode, setDarkMode] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [darkMode, setDarkMode] = useState(() => {
+  return localStorage.getItem('theme') === 'dark';
+});
+
+useEffect(() => {
+  if (darkMode) {
+    document.documentElement.classList.add('dark');
+    localStorage.setItem('theme', 'dark');
+  } else {
+    document.documentElement.classList.remove('dark');
+    localStorage.setItem('theme', 'light');
+  }
+}, [darkMode]);
+  // Initialize state based on Local Storage
+const [sidebarOpen, setSidebarOpen] = useState(() => {
+  const savedState = localStorage.getItem('sidebarState');
+  return savedState !== null ? savedState === 'true' : true;
+});
   const [activeTab, setActiveTab] = useState('Inventory');
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
@@ -179,9 +196,15 @@ const Inventory = () => {
                 </div>
               </div>
 
-              {/* Table Header */}
-              <div className={`grid grid-cols-12 gap-4 px-8 py-4 bg-stone-50/50 dark:bg-stone-900/30 border-b ${theme.border} text-[10px] uppercase tracking-[0.2em] font-bold ${theme.subText}`}>
-                <div className="col-span-4 md:col-span-3 flex items-center gap-2 cursor-pointer hover:text-[#C9A25D]">Item Name <ArrowUpDown size={10}/></div>
+              {/* --- UPDATED TABLE HEADER (MATCHES FINANCE PAGE STYLE) --- */}
+              <div className={`
+                grid grid-cols-12 gap-4 px-8 py-4 
+                border-b ${theme.border} 
+                text-[10px] uppercase tracking-[0.2em] font-medium text-stone-400 select-none
+              `}>
+                <div className="col-span-4 md:col-span-3 flex items-center gap-2 cursor-pointer hover:text-[#C9A25D] transition-colors">
+                  Item Name <ArrowUpDown size={10} className="opacity-70"/>
+                </div>
                 <div className="col-span-2 hidden md:block">SKU</div>
                 <div className="col-span-2 hidden md:block">Category</div>
                 <div className="col-span-4 md:col-span-3">Stock Level</div>
@@ -189,25 +212,24 @@ const Inventory = () => {
               </div>
 
               {/* Table Rows */}
-              <div className="divide-y divide-stone-100 dark:divide-stone-800">
-                {filteredItems.map((item, idx) => {
-                  // Calculate status logic
+              <div className={`divide-y ${darkMode ? 'divide-stone-800' : 'divide-stone-100'}`}>
+                {filteredItems.map((item) => {
                   const percentage = Math.min((item.quantity / (item.threshold * 2)) * 100, 100);
                   const isLow = item.quantity <= item.threshold;
                   
                   return (
                     <div 
                       key={item.id} 
-                      className={`grid grid-cols-12 gap-4 px-8 py-5 items-center group ${theme.hoverBg} transition-colors`}
+                      className={`grid grid-cols-12 gap-4 px-8 py-5 items-center group ${theme.hoverBg} transition-colors duration-300`}
                     >
                       {/* Name */}
                       <div className="col-span-4 md:col-span-3">
-                        <span className={`font-serif text-lg block leading-tight group-hover:text-[#C9A25D] transition-colors`}>{item.name}</span>
+                        <span className={`font-serif text-lg block leading-tight group-hover:text-[#C9A25D] transition-colors ${theme.text}`}>{item.name}</span>
                         <span className="text-[10px] text-stone-400 md:hidden block">{item.sku}</span>
                       </div>
 
                       {/* SKU */}
-                      <div className={`col-span-2 hidden md:block text-xs ${theme.subText} font-mono`}>{item.sku}</div>
+                      <div className={`col-span-2 hidden md:block text-xs ${theme.subText} font-mono tracking-wider`}>{item.sku}</div>
 
                       {/* Category */}
                       <div className="col-span-2 hidden md:block">
@@ -220,7 +242,7 @@ const Inventory = () => {
                       <div className="col-span-4 md:col-span-3">
                         <div className="flex justify-between text-xs mb-1.5">
                           <span className={isLow ? 'text-red-400 font-bold' : theme.text}>
-                            {item.quantity} <span className="text-[10px] text-stone-400">{item.unit}</span>
+                            {item.quantity} <span className="text-[10px] text-stone-400 font-normal">{item.unit}</span>
                           </span>
                           <span className="text-[10px] text-stone-400">Min: {item.threshold}</span>
                         </div>
@@ -237,11 +259,11 @@ const Inventory = () => {
                       {/* Status & Action */}
                       <div className="col-span-4 md:col-span-2 flex justify-end items-center gap-4">
                         {isLow ? (
-                          <span className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-red-500 bg-red-500/10 px-2 py-1 rounded-sm">
+                          <span className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-red-500 bg-red-500/10 px-3 py-1.5 rounded-sm font-medium">
                             <AlertTriangle size={10} /> Low
                           </span>
                         ) : (
-                          <span className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-green-600 bg-green-500/10 px-2 py-1 rounded-sm">
+                          <span className="flex items-center gap-1 text-[10px] uppercase tracking-widest text-emerald-600 bg-emerald-500/10 px-3 py-1.5 rounded-sm font-medium">
                             In Stock
                           </span>
                         )}
@@ -261,12 +283,12 @@ const Inventory = () => {
                 )}
               </div>
               
-              {/* Footer Pagination (Mock) */}
+              {/* Footer Pagination */}
               <div className="p-6 border-t border-stone-100 dark:border-stone-800 flex justify-between items-center">
                  <span className={`text-[10px] uppercase tracking-widest ${theme.subText}`}>Showing {filteredItems.length} items</span>
                  <div className="flex gap-2">
-                    <button className={`px-3 py-1 text-xs border ${theme.border} ${theme.subText} disabled:opacity-50`}>Prev</button>
-                    <button className={`px-3 py-1 text-xs border ${theme.border} hover:bg-[#C9A25D] hover:text-white transition-colors`}>Next</button>
+                    <button className={`px-4 py-1.5 text-[10px] uppercase tracking-wider border ${theme.border} ${theme.subText} hover:text-[#C9A25D] transition-colors disabled:opacity-50`}>Prev</button>
+                    <button className={`px-4 py-1.5 text-[10px] uppercase tracking-wider border ${theme.border} hover:bg-[#C9A25D] hover:text-white hover:border-[#C9A25D] transition-colors`}>Next</button>
                  </div>
               </div>
 
